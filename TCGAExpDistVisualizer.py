@@ -1,28 +1,55 @@
 # -*- coding: utf-8 -*-
-#TCGAのデータを読み込み,希望するある１つの遺伝子についての発現を正常と癌で二群に分けてboxplotで表示するプログラム
+# Making boxplot that describes the expression of your gene-of-interest in primary tumor and normal tissue from TCGA datasets.
 
 import pandas as pd
-
-import matplotlib as mpl
 import matplotlib.pyplot as plt
+import os
 
-print('Please wait...')
+def load(genomic_matrix,clinical_data):
+    _gdata = pd.read_csv(genomic_matrix, delimiter='\t', index_col=0)
+    _cdata = pd.read_csv(clinical_data, delimiter='\t', index_col=0)
+    gdata = _gdata.T
+    cdata = _cdata['sample_type']
+    return gdata, cdata
 
-df=pd.read_csv('genomicMatrix',delimiter='\t',index_col=0)
-tdf=df.T
-genelist=list(df.index)
-print('Please enter your gene of interest.')
-genename=input('>>')
-if not genename in genelist:
-	print('your GOI is not found')
-	exit()
-gdf=tdf[genename]
-cdata=pd.read_csv('clinical_data',delimiter='\t',index_col=0)
-tdf=cdata['sample_type']
-fdf=pd.concat([tdf,gdf],axis=1,join='inner')
+def aligndata(gdata,cdata,genename):
+    picked_gdata = gdata[genename]
+    eval_df = pd.concat([cdata, picked_gdata], axis=1, join='inner')
+    return eval_df
 
-fig=plt.figure()
-ax=fig.add_subplot(111)
-bp=fdf.boxplot(column=genename,by='sample_type')
-plt.show()
+def show_or_save_chart(eval_df, genename):
 
+    bp = eval_df.boxplot(column=genename, by='sample_type')
+    bp.plot()
+
+    savename = genename + '.png' 
+
+    plt.savefig(savename)
+    print('Saved as' + savename)
+
+    return 
+
+def main(gdata, cdata):
+    genelist = list(gdata.T.index)
+    
+    print('Please enter your gene of interest.')
+    genename = input('>>')
+    
+    if not genename in genelist:
+        print('your GOI is not found')
+        return
+    
+    eval_df = aligndata(gdata, cdata, genename)
+    show_or_save_chart(eval_df, genename)
+
+if __name__ == '__main__': 
+    endflg = False
+
+    print("Loading...")
+    gdata, cdata = load("genomicMatrix","clinical_data")
+
+    while not endflg:
+        main(gdata, cdata)
+        endflg = input('Quit? [y/n]') == 'y'
+
+    print("Quit")
