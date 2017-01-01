@@ -6,8 +6,12 @@ import matplotlib.pyplot as plt
 import os
 
 def load(genomic_matrix,clinical_data):
-    _gdata = pd.read_csv(genomic_matrix, delimiter='\t', index_col=0)
-    _cdata = pd.read_csv(clinical_data, delimiter='\t', index_col=0)
+    try:
+        _gdata = pd.read_csv(genomic_matrix, delimiter='\t', index_col=0)
+        _cdata = pd.read_csv(clinical_data, delimiter='\t', index_col=0)
+    except:
+        raise OSError('File is not found')
+
     gdata = _gdata.T
     cdata = _cdata['sample_type']
     return gdata, cdata
@@ -46,7 +50,7 @@ if __name__ == '__main__':
     endflg = False
 
     print("Loading...")
-    gdata, cdata = load("genomicMatrix","clinical_data")
+    gdata, cdata = load("_genomicMatrix","clinical_data")
 
     while not endflg:
         main(gdata, cdata)
